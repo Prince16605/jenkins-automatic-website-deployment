@@ -1,558 +1,337 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jenkins Pipeline Dashboard</title>
-
-<style>
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f4f6f8;
-  color: #263746;
-}
-
-header {
-  background: #263746;
-  color: white;
-  padding: 15px 25px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-header h2 {
-  margin: 0;
-}
-
-.container {
-  display: flex;
-  min-height: 100vh;
-}
-
-.sidebar {
-  width: 210px;
-  background: white;
-  padding: 20px 12px;
-  border-right: 1px solid #ddd;
-  flex-shrink: 0;
-}
-
-.sidebar a {
-  display: block;
-  color: #34495e;
-  padding: 12px;
-  margin-bottom: 5px;
-  text-decoration: none;
-  border-radius: 4px;
-}
-
-.sidebar a:hover,
-.sidebar a.active {
-  background: #e4effb;
-  color: #2674b8;
-}
-
-main {
-  padding: 25px;
-  flex: 1;
-  min-width: 0;
-}
-
-.title-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-h1 {
-  font-size: 26px;
-}
-
-button {
-  background: #367cbd;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 11px 16px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-button:hover {
-  background: #245e91;
-}
-
-button:disabled {
-  opacity: .6;
-  cursor: wait;
-}
-
-.notice {
-  background: #e6f5e9;
-  color: #247342;
-  border: 1px solid #b8dfc4;
-  padding: 14px;
-  margin: 20px 0;
-  border-radius: 4px;
-}
-
-.stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  margin-bottom: 20px;
-}
-
-.card,
-.panel {
-  background: white;
-  border: 1px solid #dce2e8;
-  border-radius: 5px;
-}
-
-.card {
-  padding: 18px;
-}
-
-.card small {
-  color: #718096;
-}
-
-.card h2 {
-  margin: 8px 0 0;
-}
-
-.success {
-  color: #258348;
-}
-
-.panel {
-  margin-bottom: 20px;
-  overflow: hidden;
-}
-
-.panel-title {
-  padding: 15px;
-  border-bottom: 1px solid #ddd;
-  font-weight: bold;
-}
-
-.pipeline {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
-  padding: 25px 15px;
-}
-
-.stage {
-  text-align: center;
-  position: relative;
-}
-
-.stage:not(:last-child)::after {
-  content: "→";
-  position: absolute;
-  right: -13px;
-  top: 8px;
-  color: #258348;
-  font-size: 20px;
-}
-
-.circle {
-  margin: auto;
-  width: 42px;
-  height: 42px;
-  display: grid;
-  place-items: center;
-  border: 2px solid #258348;
-  background: #e6f5e9;
-  color: #258348;
-  border-radius: 50%;
-  font-size: 20px;
-}
-
-.stage h3 {
-  font-size: 13px;
-  margin-bottom: 5px;
-}
-
-.stage small {
-  color: #718096;
-}
-
-.stage.running .circle {
-  background: #fff0c9;
-  color: #a46b00;
-  border-color: #d6a12d;
-  animation: pulse 1s infinite;
-}
-
-.stage.pending .circle {
-  background: #f2f4f6;
-  border-color: #c5cdd5;
-  color: #7d8995;
-}
-
-@keyframes pulse {
-  50% {
-    box-shadow: 0 0 0 5px #f4dda4;
-  }
-}
-
-.columns {
-  display: grid;
-  grid-template-columns: 1.1fr .9fr;
-  gap: 18px;
-}
-
-.console {
-  background: #18232e;
-  color: #d7e4ed;
-  padding: 16px;
-  min-height: 240px;
-  max-height: 350px;
-  overflow: auto;
-  font: 12px/1.9 Consolas, monospace;
-  overflow-wrap: anywhere;
-}
-
-.log-green {
-  color: #78dfa0;
-}
-
-.log-blue {
-  color: #80c8ff;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th, td {
-  padding: 12px 10px;
-  text-align: left;
-  border-bottom: 1px solid #eee;
-  font-size: 13px;
-}
-
-th {
-  background: #f8fafc;
-}
-
-@media (max-width: 850px) {
-  .sidebar {
-    display: none;
-  }
-
-  .stats {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .columns {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 560px) {
-  main {
-    padding: 14px;
-  }
-
-  .pipeline {
-    grid-template-columns: 1fr;
-    gap: 18px;
-  }
-
-  .stage {
-    display: grid;
-    grid-template-columns: 42px 1fr;
-    text-align: left;
-    column-gap: 12px;
-    align-items: center;
-  }
-
-  .circle {
-    grid-row: 1 / 3;
-    margin: 0;
-  }
-
-  .stage h3 {
-    margin: 0;
-  }
-
-  .stage small {
-    grid-column: 2;
-  }
-
-  .stage:not(:last-child)::after {
-    content: "↓";
-    left: 12px;
-    right: auto;
-    top: 38px;
-  }
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Jenkins CI/CD portfolio showcasing automated pipelines, builds, testing, and deployment." />
+  <title>JenkinsFlow | CI/CD Portfolio</title>
+  <style>
+    :root {
+      --bg: #080b14;
+      --panel: #101625;
+      --panel-2: #151d30;
+      --text: #f3f6ff;
+      --muted: #9aa7bf;
+      --line: rgba(164, 181, 214, .16);
+      --red: #e84949;
+      --orange: #ff9c50;
+      --green: #38d996;
+      --blue: #6da8ff;
+      --radius: 18px;
+      --shadow: 0 18px 60px rgba(0, 0, 0, .25);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 85% 0%, rgba(232,73,73,.13), transparent 28rem),
+        radial-gradient(circle at 0% 28%, rgba(75,126,255,.09), transparent 30rem),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.6;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; }
+    .container { width: min(1120px, calc(100% - 40px)); margin-inline: auto; }
+    .nav-wrap {
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(8,11,20,.78); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--line);
+    }
+    nav { min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .brand { display: flex; align-items: center; gap: 11px; font-weight: 800; letter-spacing: -.4px; }
+    .brand-mark {
+      display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px;
+      background: linear-gradient(145deg, var(--red), #a51e2a); box-shadow: 0 8px 24px #e8494933;
+      font-size: 20px;
+    }
+    .brand span:last-child { font-size: 18px; }
+    .brand em { color: var(--orange); font-style: normal; }
+    .nav-links { display: flex; gap: 26px; align-items: center; color: var(--muted); font-size: 14px; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta, .btn {
+      display: inline-flex; justify-content: center; align-items: center; gap: 9px;
+      border: 1px solid var(--line); border-radius: 11px; padding: 11px 16px;
+      color: var(--text); background: var(--panel-2); cursor: pointer; transition: .2s ease;
+    }
+    .nav-cta:hover, .btn:hover { transform: translateY(-2px); border-color: #ffffff40; }
+    .btn-primary { background: var(--red); border-color: var(--red); font-weight: 750; box-shadow: 0 10px 30px #e8494925; }
+    .btn-primary:hover { background: #f15c5c; }
+    .hero { padding: 88px 0 70px; display: grid; grid-template-columns: 1.03fr .97fr; gap: 55px; align-items: center; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 9px; padding: 7px 12px; border: 1px solid #38d99640; background: #38d9960d; color: #83edbd; border-radius: 999px; font-size: 12px; font-weight: 750; letter-spacing: .7px; text-transform: uppercase; }
+    .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 5px #38d99620; }
+    h1 { margin: 22px 0 18px; font-size: clamp(42px, 5.5vw, 68px); line-height: 1.06; letter-spacing: -2.8px; }
+    .gradient-text { background: linear-gradient(90deg, #fff 0%, #ffb18b 85%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .hero-copy { color: var(--muted); max-width: 570px; font-size: 17px; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+    .trust-line { display: flex; align-items: center; gap: 12px; margin-top: 28px; color: var(--muted); font-size: 13px; }
+    .avatars { display: flex; }
+    .avatars span { width: 29px; height: 29px; border-radius: 50%; display: grid; place-items: center; background: #202d46; border: 2px solid var(--bg); margin-left: -7px; font-size: 11px; }
+    .avatars span:first-child { margin-left: 0; }
+    .terminal {
+      border: 1px solid #ffffff1b; border-radius: 18px; overflow: hidden; background: #0c111e;
+      box-shadow: var(--shadow); transform: perspective(1100px) rotateY(-3deg) rotateX(2deg);
+    }
+    .terminal-top { display: flex; justify-content: space-between; align-items: center; padding: 14px 17px; background: #141b2b; border-bottom: 1px solid var(--line); }
+    .dots { display: flex; gap: 6px; }
+    .dots i { width: 8px; height: 8px; border-radius: 50%; background: #ff6565; }
+    .dots i:nth-child(2) { background: #ffc45c; } .dots i:nth-child(3) { background: #45d995; }
+    .terminal-title { color: #b7c2d9; font-size: 12px; }
+    .running { font-size: 11px; color: var(--green); }
+    .terminal-body { padding: 22px; font: 12px/1.9 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #b7c6df; }
+    .line { display: flex; gap: 12px; }
+    .ln { color: #56647d; min-width: 16px; text-align: right; }
+    .cmd { color: #f7f8ff; } .ok { color: var(--green); } .warn { color: var(--orange); }
+    .progress { height: 6px; background: #263047; border-radius: 9px; margin: 19px 0 8px; overflow: hidden; }
+    .progress span { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, var(--red), var(--orange), var(--green)); border-radius: inherit; }
+    .terminal-foot { display: flex; justify-content: space-between; color: #74839e; font-size: 11px; }
+    .section { padding: 72px 0; }
+    .section-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 30px; }
+    .kicker { color: var(--orange); text-transform: uppercase; letter-spacing: 1.8px; font-size: 11px; font-weight: 800; }
+    h2 { margin: 8px 0 0; font-size: clamp(28px, 3.5vw, 40px); line-height: 1.15; letter-spacing: -1.2px; }
+    .section-desc { max-width: 450px; color: var(--muted); margin: 0; font-size: 14px; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .stat, .card, .project-card, .contact-card { background: linear-gradient(145deg, #121a2a, #0e1421); border: 1px solid var(--line); border-radius: var(--radius); }
+    .stat { padding: 23px; }
+    .stat-label { color: var(--muted); font-size: 12px; }
+    .stat-value { font-size: 29px; font-weight: 800; letter-spacing: -1px; margin: 5px 0; }
+    .stat-note { color: var(--green); font-size: 11px; }
+    .pipeline { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    .stage { position: relative; padding: 20px 15px; border-radius: 15px; border: 1px solid var(--line); background: var(--panel); min-height: 155px; }
+    .stage:not(:last-child)::after { content: "→"; position: absolute; right: -15px; top: 30px; z-index: 1; color: var(--orange); font-size: 20px; }
+    .stage-icon { width: 37px; height: 37px; border-radius: 11px; display: grid; place-items: center; background: #e8494918; color: #ff8b8b; font-size: 17px; margin-bottom: 15px; }
+    .stage:nth-child(2) .stage-icon { background: #6da8ff18; color: var(--blue); }
+    .stage:nth-child(3) .stage-icon { background: #b38aff18; color: #c6a8ff; }
+    .stage:nth-child(4) .stage-icon { background: #ff9c5018; color: var(--orange); }
+    .stage:nth-child(5) .stage-icon { background: #38d99618; color: var(--green); }
+    .stage h3 { margin: 0 0 4px; font-size: 14px; }
+    .stage p { margin: 0; font-size: 12px; color: var(--muted); }
+    .stage-state { display: inline-block; margin-top: 12px; color: var(--green); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .card { padding: 26px; }
+    .card h3 { margin: 0 0 8px; font-size: 18px; }
+    .card > p { margin: 0; color: var(--muted); font-size: 13px; }
+    .build-list { margin-top: 21px; display: grid; gap: 10px; }
+    .build-row { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; background: #ffffff05; border: 1px solid #ffffff0b; }
+    .build-icon { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: #38d99618; color: var(--green); }
+    .build-meta { flex: 1; min-width: 0; }
+    .build-meta strong { display: block; font-size: 12px; }
+    .build-meta small { display: block; color: var(--muted); font-size: 11px; }
+    .build-time { color: var(--muted); font-size: 11px; white-space: nowrap; }
+    .skills { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 20px; }
+    .skill { padding: 8px 11px; border: 1px solid var(--line); background: #ffffff05; border-radius: 9px; color: #c8d3e7; font-size: 12px; }
+    .project-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .project-card { padding: 22px; transition: .2s ease; }
+    .project-card:hover { transform: translateY(-4px); border-color: #e8494960; }
+    .project-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .project-symbol { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px; background: #e8494918; color: #ff8989; font-size: 20px; }
+    .tag { font-size: 10px; border-radius: 999px; padding: 5px 8px; color: var(--green); background: #38d99612; border: 1px solid #38d99625; }
+    .project-card h3 { margin: 0 0 8px; font-size: 16px; }
+    .project-card p { margin: 0; color: var(--muted); font-size: 13px; }
+    .project-card .skills { margin-top: 17px; }
+    .project-card .skill { font-size: 10px; padding: 5px 8px; }
+    .contact { padding: 28px 0 78px; }
+    .contact-card { padding: 38px; display: flex; align-items: center; justify-content: space-between; gap: 24px; background: radial-gradient(circle at 100% 0%, #e8494922, transparent 24rem), #111827; }
+    .contact-card p { margin: 10px 0 0; color: var(--muted); max-width: 570px; }
+    footer { border-top: 1px solid var(--line); padding: 24px 0; color: var(--muted); font-size: 12px; }
+    .footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .footer-links { display: flex; gap: 18px; }
+    .footer-links a:hover { color: var(--text); }
+    .toast { position: fixed; bottom: 22px; right: 22px; padding: 13px 17px; border-radius: 12px; background: #18253a; border: 1px solid #38d99650; box-shadow: var(--shadow); color: var(--text); font-size: 13px; opacity: 0; transform: translateY(10px); pointer-events: none; transition: .25s; z-index: 20; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; gap: 38px; padding-top: 65px; }
+      .terminal { transform: none; }
+      .pipeline { grid-template-columns: repeat(3, 1fr); }
+      .stage:not(:last-child)::after { display: none; }
+      .project-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 620px) {
+      .container { width: min(100% - 28px, 1120px); }
+      nav { min-height: 64px; }
+      .nav-links { display: none; }
+      .nav-cta { padding: 9px 11px; font-size: 12px; }
+      .hero { padding: 55px 0 40px; }
+      h1 { letter-spacing: -1.8px; }
+      .hero-copy { font-size: 15px; }
+      .section { padding: 48px 0; }
+      .section-head { display: block; }
+      .section-desc { margin-top: 12px; }
+      .stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .stat { padding: 17px; }
+      .stat-value { font-size: 25px; }
+      .pipeline { grid-template-columns: repeat(2, 1fr); }
+      .two-col, .project-grid { grid-template-columns: 1fr; }
+      .contact-card { padding: 25px; align-items: flex-start; flex-direction: column; }
+      .footer-inner { flex-direction: column; align-items: flex-start; }
+      .terminal-body { padding: 15px; font-size: 10px; }
+    }
+  </style>
 </head>
-
 <body>
-
-<header>
-  <h2>⚙ Jenkins</h2>
-  <span>Admin ▾</span>
-</header>
-
-<div class="container">
-
-  <aside class="sidebar">
-    <a href="#" class="active">⌂ Dashboard</a>
-    <a href="#pipeline">⇄ My-Pipeline</a>
-    <a href="#history">◷ Build History</a>
-    <a href="#console">▤ Console Output</a>
-    <a href="#" id="sideBuild">▶ Build Now</a>
-  </aside>
+  <div class="nav-wrap">
+    <nav class="container" aria-label="Main navigation">
+      <a class="brand" href="#home" aria-label="JenkinsFlow home">
+        <span class="brand-mark">⚙</span><span>Jenkins<em>Flow</em></span>
+      </a>
+      <div class="nav-links">
+        <a href="#pipeline">Pipeline</a><a href="#builds">Builds</a><a href="#projects">Projects</a><a href="#skills">Skills</a>
+      </div>
+      <a class="nav-cta" href="#contact">Let's Connect ↗</a>
+    </nav>
+  </div>
 
   <main>
-    <div class="title-row">
+    <section class="hero container" id="home">
       <div>
-        <h1>My-Pipeline</h1>
-        <small>Dashboard / My-Pipeline</small>
-      </div>
-      <button id="buildButton">▶ Build Now</button>
-    </div>
-
-    <div class="notice" id="notice">
-      ✓ <strong id="noticeText">
-        Build #42 completed successfully
-      </strong>
-    </div>
-
-    <div class="stats">
-      <div class="card">
-        <small>LAST BUILD</small>
-        <h2 class="success" id="lastBuild">#42 ✓</h2>
+        <div class="eyebrow"><span class="pulse"></span> CI/CD · Automation · DevOps</div>
+        <h1>Ship faster.<br /><span class="gradient-text">Deploy smarter.</span></h1>
+        <p class="hero-copy">A Jenkins-powered DevOps portfolio demonstrating automated build, test, and deployment workflows—from a Git commit to a reliable release.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#pipeline">Explore Pipeline <span>↘</span></a>
+          <a class="btn" href="#projects">View Projects</a>
+        </div>
+        <div class="trust-line">
+          <div class="avatars"><span>J</span><span>G</span><span>🐳</span></div>
+          <span>Jenkins · Git · Docker · Linux</span>
+        </div>
       </div>
 
-      <div class="card">
-        <small>BUILD STATUS</small>
-        <h2 class="success" id="status">SUCCESS</h2>
-      </div>
-
-      <div class="card">
-        <small>DURATION</small>
-        <h2 id="duration">1m 24s</h2>
-      </div>
-
-      <div class="card">
-        <small>BRANCH</small>
-        <h2>main</h2>
-      </div>
-    </div>
-
-    <section class="panel" id="pipeline">
-      <div class="panel-title">Pipeline Stage View</div>
-
-      <div class="pipeline" id="stages">
-
-        <div class="stage">
-          <div class="circle">✓</div>
-          <h3>Checkout</h3>
-          <small>Get source code</small>
+      <div class="terminal" aria-label="Illustrative pipeline terminal">
+        <div class="terminal-top">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <span class="terminal-title">jenkins / daily-build #024</span>
+          <span class="running">● SUCCESS</span>
         </div>
-
-        <div class="stage">
-          <div class="circle">✓</div>
-          <h3>Build</h3>
-          <small>Build application</small>
+        <div class="terminal-body">
+          <div class="line"><span class="ln">01</span><span><span class="cmd">$ git checkout main</span></span></div>
+          <div class="line"><span class="ln">02</span><span>✓ Repository checked out <span class="ok">[OK]</span></span></div>
+          <div class="line"><span class="ln">03</span><span><span class="cmd">$ npm ci</span></span></div>
+          <div class="line"><span class="ln">04</span><span>✓ Dependencies installed <span class="ok">[OK]</span></span></div>
+          <div class="line"><span class="ln">05</span><span><span class="cmd">$ npm test</span></span></div>
+          <div class="line"><span class="ln">06</span><span>✓ Tests passed: 24 / 24 <span class="ok">[OK]</span></span></div>
+          <div class="line"><span class="ln">07</span><span><span class="cmd">$ ./deploy.sh production</span></span></div>
+          <div class="line"><span class="ln">08</span><span>✓ Deployment completed <span class="ok">[OK]</span></span></div>
+          <div class="progress"><span></span></div>
+          <div class="terminal-foot"><span>Pipeline completed</span><span>Duration: 01m 42s</span></div>
         </div>
-
-        <div class="stage">
-          <div class="circle">✓</div>
-          <h3>Test</h3>
-          <small>Run tests</small>
-        </div>
-
-        <div class="stage">
-          <div class="circle">✓</div>
-          <h3>Package</h3>
-          <small>Create artifact</small>
-        </div>
-
-        <div class="stage">
-          <div class="circle">✓</div>
-          <h3>Deploy</h3>
-          <small>Deploy application</small>
-        </div>
-
       </div>
     </section>
 
-    <div class="columns">
+    <section class="section container" id="builds">
+      <div class="section-head">
+        <div><div class="kicker">At a glance</div><h2>Pipeline overview</h2></div>
+        <p class="section-desc">A sample dashboard layout for your portfolio. These figures are illustrative demo values, not live Jenkins server data.</p>
+      </div>
+      <div class="stats">
+        <article class="stat"><div class="stat-label">Build Success Rate</div><div class="stat-value">98.4%</div><div class="stat-note">↑ Demo metric</div></article>
+        <article class="stat"><div class="stat-label">Builds Completed</div><div class="stat-value">1,284</div><div class="stat-note">✓ Sample total</div></article>
+        <article class="stat"><div class="stat-label">Avg. Build Time</div><div class="stat-value">1m 42s</div><div class="stat-note">↓ Sample duration</div></article>
+        <article class="stat"><div class="stat-label">Deployments</div><div class="stat-value">76</div><div class="stat-note">✓ Sample total</div></article>
+      </div>
+    </section>
 
-      <section class="panel" id="console">
-        <div class="panel-title">Console Output</div>
-        <div class="console" id="logs">
-          <div>[Pipeline] Start of Pipeline</div>
-          <div>[Pipeline] stage (Checkout)</div>
-          <div class="log-blue">✓ Git checkout successful</div>
-          <div>[Pipeline] stage (Build)</div>
-          <div class="log-green">✓ Build completed successfully</div>
-          <div>[Pipeline] stage (Test)</div>
-          <div class="log-green">✓ All tests passed</div>
-          <div>[Pipeline] stage (Package)</div>
-          <div class="log-green">✓ Artifact created</div>
-          <div>[Pipeline] stage (Deploy)</div>
-          <div class="log-green">✓ Deployment completed</div>
-          <div class="log-green">Finished: SUCCESS</div>
-        </div>
-      </section>
+    <section class="section container" id="pipeline">
+      <div class="section-head">
+        <div><div class="kicker">From commit to release</div><h2>CI/CD pipeline stages</h2></div>
+        <p class="section-desc">A common Jenkins workflow. Customize each stage to match the tools and commands in your own project.</p>
+      </div>
+      <div class="pipeline">
+        <article class="stage"><div class="stage-icon">⌘</div><h3>Source</h3><p>GitHub repository and webhook trigger.</p><span class="stage-state">✓ Connected (demo)</span></article>
+        <article class="stage"><div class="stage-icon">⚙</div><h3>Build</h3><p>Install dependencies and compile assets.</p><span class="stage-state">✓ Passed (demo)</span></article>
+        <article class="stage"><div class="stage-icon">✓</div><h3>Test</h3><p>Run automated checks and unit tests.</p><span class="stage-state">✓ Passed (demo)</span></article>
+        <article class="stage"><div class="stage-icon">▣</div><h3>Package</h3><p>Create an artifact or Docker image.</p><span class="stage-state">✓ Ready (demo)</span></article>
+        <article class="stage"><div class="stage-icon">↗</div><h3>Deploy</h3><p>Release to a configured server or cloud.</p><span class="stage-state">✓ Released (demo)</span></article>
+      </div>
+    </section>
 
-      <section class="panel" id="history">
-        <div class="panel-title">Build History</div>
-        <table>
-          <thead>
-            <tr>
-              <th>Build</th>
-              <th>Status</th>
-              <th>Duration</th>
-            </tr>
-          </thead>
-          <tbody id="historyRows">
-            <tr>
-              <td>#42</td>
-              <td class="success">✓ Success</td>
-              <td>1m 24s</td>
-            </tr>
-            <tr>
-              <td>#41</td>
-              <td class="success">✓ Success</td>
-              <td>1m 19s</td>
-            </tr>
-            <tr>
-              <td>#40</td>
-              <td class="success">✓ Success</td>
-              <td>1m 31s</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
+    <section class="section container">
+      <div class="two-col">
+        <article class="card">
+          <div class="kicker">Recent activity</div><h3 style="margin-top:8px">Build history</h3><p>Example build entries for the visual portfolio.</p>
+          <div class="build-list">
+            <div class="build-row"><div class="build-icon">✓</div><div class="build-meta"><strong>#024 · main</strong><small>Build and deploy workflow</small></div><span class="build-time">1m 42s</span></div>
+            <div class="build-row"><div class="build-icon">✓</div><div class="build-meta"><strong>#023 · feature/navbar</strong><small>UI validation and tests</small></div><span class="build-time">1m 36s</span></div>
+            <div class="build-row"><div class="build-icon">✓</div><div class="build-meta"><strong>#022 · main</strong><small>Production release (demo)</small></div><span class="build-time">2m 04s</span></div>
+          </div>
+        </article>
+        <article class="card" id="skills">
+          <div class="kicker">Toolbox</div><h3 style="margin-top:8px">DevOps skills</h3><p>Technologies used in a typical Jenkins automation project.</p>
+          <div class="skills">
+            <span class="skill">Jenkins</span><span class="skill">Jenkinsfile</span><span class="skill">Git & GitHub</span><span class="skill">Webhooks</span><span class="skill">Linux</span><span class="skill">Bash</span><span class="skill">Docker</span><span class="skill">Nginx</span><span class="skill">AWS EC2</span><span class="skill">CI/CD</span><span class="skill">HTML/CSS</span><span class="skill">Monitoring</span>
+          </div>
+          <div style="margin-top:24px;padding-top:19px;border-top:1px solid var(--line)">
+            <div style="display:flex;justify-content:space-between;gap:12px;font-size:12px"><strong>Automation mindset</strong><span style="color:var(--green)">Build · Test · Deploy</span></div>
+            <p style="margin-top:8px">Use repeatable pipelines, clear logs, secure credentials, and rollback plans to improve release reliability.</p>
+          </div>
+        </article>
+      </div>
+    </section>
 
-    </div>
+    <section class="section container" id="projects">
+      <div class="section-head">
+        <div><div class="kicker">Selected work</div><h2>Automation projects</h2></div>
+        <p class="section-desc">Starter project cards. Replace descriptions and repository links with your real work before publishing.</p>
+      </div>
+      <div class="project-grid">
+        <article class="project-card">
+          <div class="project-top"><div class="project-symbol">↻</div><span class="tag">CI/CD</span></div>
+          <h3>Jenkins Pipeline Automation</h3><p>Automate source checkout, build, testing, and deployment using a declarative Jenkinsfile.</p>
+          <div class="skills"><span class="skill">Jenkins</span><span class="skill">GitHub</span><span class="skill">Webhook</span></div>
+        </article>
+        <article class="project-card">
+          <div class="project-top"><div class="project-symbol">▣</div><span class="tag">Containers</span></div>
+          <h3>Docker Build & Release</h3><p>Build a container image, tag versions, and prepare a consistent application release.</p>
+          <div class="skills"><span class="skill">Docker</span><span class="skill">Linux</span><span class="skill">Registry</span></div>
+        </article>
+        <article class="project-card">
+          <div class="project-top"><div class="project-symbol">☁</div><span class="tag">Cloud</span></div>
+          <h3>Cloud Deployment</h3><p>Deploy a static website to a Linux server with Nginx and verify the service after release.</p>
+          <div class="skills"><span class="skill">AWS EC2</span><span class="skill">Nginx</span><span class="skill">SSH</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="contact container" id="contact">
+      <div class="contact-card">
+        <div><div class="kicker">Let's build something</div><h2>Ready to automate your next release?</h2><p>Connect with me to discuss Jenkins pipelines, CI/CD automation, Linux deployments, and DevOps projects.</p></div>
+        <a class="btn btn-primary" href="https://www.linkedin.com/" target="_blank" rel="noopener noreferrer">Connect on LinkedIn ↗</a>
+      </div>
+    </section>
   </main>
-</div>
 
-<script>
-let buildNumber = 42;
+  <footer>
+    <div class="container footer-inner">
+      <a class="brand" href="#home"><span class="brand-mark">⚙</span><span>Jenkins<em>Flow</em></span></a>
+      <span>© <span id="year"></span> JenkinsFlow Portfolio · Built for CI/CD learning</span>
+      <div class="footer-links"><a href="#pipeline">Pipeline</a><a href="#projects">Projects</a><a href="#contact">Contact</a></div>
+    </div>
+  </footer>
+  <div class="toast" id="toast" role="status" aria-live="polite">This is a demo portfolio. Connect your real Jenkins data to show live status.</div>
 
-const buildButton = document.getElementById("buildButton");
-const stages = [...document.querySelectorAll(".stage")];
-const logs = document.getElementById("logs");
+  <script>
+    // Front-end interactions only; this page does not connect to a Jenkins server.
+    document.getElementById("year").textContent = new Date().getFullYear();
 
-function addLog(message, className = "") {
-  const line = document.createElement("div");
-  line.textContent = message;
-  line.className = className;
-  logs.appendChild(line);
-  logs.scrollTop = logs.scrollHeight;
-}
+    const toast = document.getElementById("toast");
+    let toastTimer;
+    document.querySelectorAll('a[href^="#"]').forEach((link) => {
+      link.addEventListener("click", () => {
+        const target = document.querySelector(link.getAttribute("href"));
+        if (target) target.setAttribute("tabindex", "-1");
+      });
+    });
 
-function buildPipeline() {
-  if (buildButton.disabled) return;
-
-  buildNumber++;
-  buildButton.disabled = true;
-  buildButton.textContent = "⟳ Building...";
-
-  document.getElementById("status").textContent = "BUILDING";
-  document.getElementById("status").className = "";
-  document.getElementById("noticeText").textContent =
-    "Build #" + buildNumber + " is running...";
-
-  logs.innerHTML = "";
-  addLog("[Pipeline] Start of Pipeline");
-
-  const stageNames = [
-    "Checkout", "Build", "Test", "Package", "Deploy"
-  ];
-
-  const stageLogs = [
-    "Fetching source code from Git...",
-    "Building application...",
-    "Running validation tests...",
-    "Creating deployment artifact...",
-    "Deploying application..."
-  ];
-
-  stages.forEach(stage => {
-    stage.className = "stage pending";
-    stage.querySelector(".circle").textContent = "○";
-  });
-
-  let index = 0;
-
-  function nextStage() {
-    if (index > 0) {
-      const previous = stages[index - 1];
-      previous.className = "stage";
-      previous.querySelector(".circle").textContent = "✓";
-    }
-
-    if (index < stages.length) {
-      const stage = stages[index];
-      stage.className = "stage running";
-      stage.querySelector(".circle").textContent = "↻";
-
-      addLog("[Pipeline] stage (" + stageNames[index] + ")");
-      addLog(stageLogs[index], "log-blue");
-
-      setTimeout(() => {
-        addLog("✓ " + stageNames[index] + " completed", "log-green");
-        index++;
-        nextStage();
-      }, 700);
-
-    } else {
-      addLog("Finished: SUCCESS", "log-green");
-
-      document.getElementById("status").textContent = "SUCCESS";
-      document.getElementById("status").className = "success";
-      document.getElementById("lastBuild").textContent =
-        "#" + buildNumber + " ✓";
-      document.getElementById("duration").textContent = "Demo run";
-      document.getElementById("noticeText").textContent =
-        "Build #" + buildNumber + " completed successfully";
-
-      document.getElementById("historyRows").insertAdjacentHTML(
-        "afterbegin",
-        "<tr><td>#" + buildNumber +
-        "</td><td class='success'>✓ Success</td>" +
-        "<td>Demo run</td></tr>"
-      );
-
-      buildButton.disabled = false;
-      buildButton.textContent = "▶ Build Now";
-    }
-  }
-
-  nextStage();
-}
-
-buildButton.addEventListener("click", buildPipeline);
-
-document.getElementById("sideBuild").addEventListener("click", function(e) {
-  e.preventDefault();
-  buildPipeline();
-});
-</script>
-
+    // Keyboard shortcut: press "?" to show the demo notice.
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "?" && !event.ctrlKey && !event.metaKey) {
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("show"), 3200);
+      }
+    });
+  </script>
 </body>
 </html>
