@@ -1,0 +1,17 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jenkins CI/CD Project</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Automatic Deployment Successful!</h1>
+    <p>Deployed using Jenkins, GitHub and AWS EC2.</p>
+    <p>Every code push triggers our CI/CD workflow.</p>
+  </main>
+</body>
+</html>
