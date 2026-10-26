@@ -2,16 +2,557 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jenkins CI/CD Project</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jenkins Pipeline Dashboard</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+  color: #263746;
+}
+
+header {
+  background: #263746;
+  color: white;
+  padding: 15px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header h2 {
+  margin: 0;
+}
+
+.container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 210px;
+  background: white;
+  padding: 20px 12px;
+  border-right: 1px solid #ddd;
+  flex-shrink: 0;
+}
+
+.sidebar a {
+  display: block;
+  color: #34495e;
+  padding: 12px;
+  margin-bottom: 5px;
+  text-decoration: none;
+  border-radius: 4px;
+}
+
+.sidebar a:hover,
+.sidebar a.active {
+  background: #e4effb;
+  color: #2674b8;
+}
+
+main {
+  padding: 25px;
+  flex: 1;
+  min-width: 0;
+}
+
+.title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+h1 {
+  font-size: 26px;
+}
+
+button {
+  background: #367cbd;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 11px 16px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button:hover {
+  background: #245e91;
+}
+
+button:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
+.notice {
+  background: #e6f5e9;
+  color: #247342;
+  border: 1px solid #b8dfc4;
+  padding: 14px;
+  margin: 20px 0;
+  border-radius: 4px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.card,
+.panel {
+  background: white;
+  border: 1px solid #dce2e8;
+  border-radius: 5px;
+}
+
+.card {
+  padding: 18px;
+}
+
+.card small {
+  color: #718096;
+}
+
+.card h2 {
+  margin: 8px 0 0;
+}
+
+.success {
+  color: #258348;
+}
+
+.panel {
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.panel-title {
+  padding: 15px;
+  border-bottom: 1px solid #ddd;
+  font-weight: bold;
+}
+
+.pipeline {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  padding: 25px 15px;
+}
+
+.stage {
+  text-align: center;
+  position: relative;
+}
+
+.stage:not(:last-child)::after {
+  content: "→";
+  position: absolute;
+  right: -13px;
+  top: 8px;
+  color: #258348;
+  font-size: 20px;
+}
+
+.circle {
+  margin: auto;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #258348;
+  background: #e6f5e9;
+  color: #258348;
+  border-radius: 50%;
+  font-size: 20px;
+}
+
+.stage h3 {
+  font-size: 13px;
+  margin-bottom: 5px;
+}
+
+.stage small {
+  color: #718096;
+}
+
+.stage.running .circle {
+  background: #fff0c9;
+  color: #a46b00;
+  border-color: #d6a12d;
+  animation: pulse 1s infinite;
+}
+
+.stage.pending .circle {
+  background: #f2f4f6;
+  border-color: #c5cdd5;
+  color: #7d8995;
+}
+
+@keyframes pulse {
+  50% {
+    box-shadow: 0 0 0 5px #f4dda4;
+  }
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap: 18px;
+}
+
+.console {
+  background: #18232e;
+  color: #d7e4ed;
+  padding: 16px;
+  min-height: 240px;
+  max-height: 350px;
+  overflow: auto;
+  font: 12px/1.9 Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+
+.log-green {
+  color: #78dfa0;
+}
+
+.log-blue {
+  color: #80c8ff;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 12px 10px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+  font-size: 13px;
+}
+
+th {
+  background: #f8fafc;
+}
+
+@media (max-width: 850px) {
+  .sidebar {
+    display: none;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  main {
+    padding: 14px;
+  }
+
+  .pipeline {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .stage {
+    display: grid;
+    grid-template-columns: 42px 1fr;
+    text-align: left;
+    column-gap: 12px;
+    align-items: center;
+  }
+
+  .circle {
+    grid-row: 1 / 3;
+    margin: 0;
+  }
+
+  .stage h3 {
+    margin: 0;
+  }
+
+  .stage small {
+    grid-column: 2;
+  }
+
+  .stage:not(:last-child)::after {
+    content: "↓";
+    left: 12px;
+    right: auto;
+    top: 38px;
+  }
+}
+</style>
 </head>
+
 <body>
+
+<header>
+  <h2>⚙ Jenkins</h2>
+  <span>Admin ▾</span>
+</header>
+
+<div class="container">
+
+  <aside class="sidebar">
+    <a href="#" class="active">⌂ Dashboard</a>
+    <a href="#pipeline">⇄ My-Pipeline</a>
+    <a href="#history">◷ Build History</a>
+    <a href="#console">▤ Console Output</a>
+    <a href="#" id="sideBuild">▶ Build Now</a>
+  </aside>
+
   <main>
-    <h1>Automatic Deployment Successful!</h1>
-    <p>Deployed using Jenkins, GitHub and AWS EC2.</p>
-    <p>Every code push triggers our CI/CD workflow.</p>
+    <div class="title-row">
+      <div>
+        <h1>My-Pipeline</h1>
+        <small>Dashboard / My-Pipeline</small>
+      </div>
+      <button id="buildButton">▶ Build Now</button>
+    </div>
+
+    <div class="notice" id="notice">
+      ✓ <strong id="noticeText">
+        Build #42 completed successfully
+      </strong>
+    </div>
+
+    <div class="stats">
+      <div class="card">
+        <small>LAST BUILD</small>
+        <h2 class="success" id="lastBuild">#42 ✓</h2>
+      </div>
+
+      <div class="card">
+        <small>BUILD STATUS</small>
+        <h2 class="success" id="status">SUCCESS</h2>
+      </div>
+
+      <div class="card">
+        <small>DURATION</small>
+        <h2 id="duration">1m 24s</h2>
+      </div>
+
+      <div class="card">
+        <small>BRANCH</small>
+        <h2>main</h2>
+      </div>
+    </div>
+
+    <section class="panel" id="pipeline">
+      <div class="panel-title">Pipeline Stage View</div>
+
+      <div class="pipeline" id="stages">
+
+        <div class="stage">
+          <div class="circle">✓</div>
+          <h3>Checkout</h3>
+          <small>Get source code</small>
+        </div>
+
+        <div class="stage">
+          <div class="circle">✓</div>
+          <h3>Build</h3>
+          <small>Build application</small>
+        </div>
+
+        <div class="stage">
+          <div class="circle">✓</div>
+          <h3>Test</h3>
+          <small>Run tests</small>
+        </div>
+
+        <div class="stage">
+          <div class="circle">✓</div>
+          <h3>Package</h3>
+          <small>Create artifact</small>
+        </div>
+
+        <div class="stage">
+          <div class="circle">✓</div>
+          <h3>Deploy</h3>
+          <small>Deploy application</small>
+        </div>
+
+      </div>
+    </section>
+
+    <div class="columns">
+
+      <section class="panel" id="console">
+        <div class="panel-title">Console Output</div>
+        <div class="console" id="logs">
+          <div>[Pipeline] Start of Pipeline</div>
+          <div>[Pipeline] stage (Checkout)</div>
+          <div class="log-blue">✓ Git checkout successful</div>
+          <div>[Pipeline] stage (Build)</div>
+          <div class="log-green">✓ Build completed successfully</div>
+          <div>[Pipeline] stage (Test)</div>
+          <div class="log-green">✓ All tests passed</div>
+          <div>[Pipeline] stage (Package)</div>
+          <div class="log-green">✓ Artifact created</div>
+          <div>[Pipeline] stage (Deploy)</div>
+          <div class="log-green">✓ Deployment completed</div>
+          <div class="log-green">Finished: SUCCESS</div>
+        </div>
+      </section>
+
+      <section class="panel" id="history">
+        <div class="panel-title">Build History</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Build</th>
+              <th>Status</th>
+              <th>Duration</th>
+            </tr>
+          </thead>
+          <tbody id="historyRows">
+            <tr>
+              <td>#42</td>
+              <td class="success">✓ Success</td>
+              <td>1m 24s</td>
+            </tr>
+            <tr>
+              <td>#41</td>
+              <td class="success">✓ Success</td>
+              <td>1m 19s</td>
+            </tr>
+            <tr>
+              <td>#40</td>
+              <td class="success">✓ Success</td>
+              <td>1m 31s</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+    </div>
   </main>
+</div>
+
+<script>
+let buildNumber = 42;
+
+const buildButton = document.getElementById("buildButton");
+const stages = [...document.querySelectorAll(".stage")];
+const logs = document.getElementById("logs");
+
+function addLog(message, className = "") {
+  const line = document.createElement("div");
+  line.textContent = message;
+  line.className = className;
+  logs.appendChild(line);
+  logs.scrollTop = logs.scrollHeight;
+}
+
+function buildPipeline() {
+  if (buildButton.disabled) return;
+
+  buildNumber++;
+  buildButton.disabled = true;
+  buildButton.textContent = "⟳ Building...";
+
+  document.getElementById("status").textContent = "BUILDING";
+  document.getElementById("status").className = "";
+  document.getElementById("noticeText").textContent =
+    "Build #" + buildNumber + " is running...";
+
+  logs.innerHTML = "";
+  addLog("[Pipeline] Start of Pipeline");
+
+  const stageNames = [
+    "Checkout", "Build", "Test", "Package", "Deploy"
+  ];
+
+  const stageLogs = [
+    "Fetching source code from Git...",
+    "Building application...",
+    "Running validation tests...",
+    "Creating deployment artifact...",
+    "Deploying application..."
+  ];
+
+  stages.forEach(stage => {
+    stage.className = "stage pending";
+    stage.querySelector(".circle").textContent = "○";
+  });
+
+  let index = 0;
+
+  function nextStage() {
+    if (index > 0) {
+      const previous = stages[index - 1];
+      previous.className = "stage";
+      previous.querySelector(".circle").textContent = "✓";
+    }
+
+    if (index < stages.length) {
+      const stage = stages[index];
+      stage.className = "stage running";
+      stage.querySelector(".circle").textContent = "↻";
+
+      addLog("[Pipeline] stage (" + stageNames[index] + ")");
+      addLog(stageLogs[index], "log-blue");
+
+      setTimeout(() => {
+        addLog("✓ " + stageNames[index] + " completed", "log-green");
+        index++;
+        nextStage();
+      }, 700);
+
+    } else {
+      addLog("Finished: SUCCESS", "log-green");
+
+      document.getElementById("status").textContent = "SUCCESS";
+      document.getElementById("status").className = "success";
+      document.getElementById("lastBuild").textContent =
+        "#" + buildNumber + " ✓";
+      document.getElementById("duration").textContent = "Demo run";
+      document.getElementById("noticeText").textContent =
+        "Build #" + buildNumber + " completed successfully";
+
+      document.getElementById("historyRows").insertAdjacentHTML(
+        "afterbegin",
+        "<tr><td>#" + buildNumber +
+        "</td><td class='success'>✓ Success</td>" +
+        "<td>Demo run</td></tr>"
+      );
+
+      buildButton.disabled = false;
+      buildButton.textContent = "▶ Build Now";
+    }
+  }
+
+  nextStage();
+}
+
+buildButton.addEventListener("click", buildPipeline);
+
+document.getElementById("sideBuild").addEventListener("click", function(e) {
+  e.preventDefault();
+  buildPipeline();
+});
+</script>
+
 </body>
 </html>
