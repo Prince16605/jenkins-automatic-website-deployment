@@ -17,12 +17,13 @@ pipeline {
         stage('Validate') {
             steps {
                 sh '''
-                    echo "Checking website files..."
-                    pwd
+                    set -eu
+                    echo "Workspace: $(pwd)"
                     ls -la
                     test -s index.html
                     test -s style.css
-                    echo "Validation successful"
+                    grep -qi '<html' index.html
+                    echo "Validation passed"
                 '''
             }
         }
@@ -30,14 +31,15 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh '''
-                    set -e
-                    mkdir -p /var/www/jenkins-site
-                    rsync -av \
+                    set -eu
+                    rsync -av --delete \
                       --exclude='.git/' \
                       --exclude='Jenkinsfile' \
                       --exclude='README.md' \
                       ./ /var/www/jenkins-site/
+                    test -s /var/www/jenkins-site/index.html
                     curl -fsS http://127.0.0.1/ >/dev/null
+                    echo "Deployment and HTTP verification passed"
                 '''
             }
         }
@@ -45,10 +47,10 @@ pipeline {
 
     post {
         success {
-            echo 'Website deployed successfully!'
+            echo 'SUCCESS: Website deployed!'
         }
         failure {
-            echo 'Pipeline failed. Check Console Output.'
+            echo 'FAILED: Check the first error in Console Output.'
         }
     }
 }
