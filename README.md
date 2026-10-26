@@ -162,7 +162,7 @@ To use GitHub webhooks, configure a webhook in the GitHub repository and enable 
 
 ## Author
 
-**Yash Bhesaniya**
+**Prince Vaghasiya**
 
 Repository: [jenkins-automatic-website-deployment](https://github.com/Prince16605/jenkins-automatic-website-deployment)
 
