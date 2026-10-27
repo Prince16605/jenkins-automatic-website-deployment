@@ -82,33 +82,11 @@ Developer --git push--> GitHub Repository
 
 ### 1. Prepare the web root
 
-On the EC2 instance, if Jenkins runs locally as the `jenkins` user:
-
-```bash
-sudo mkdir -p /var/www/jenkins-site
-sudo chown -R jenkins:www-data /var/www/jenkins-site
-sudo chmod 2755 /var/www/jenkins-site
-```
+On the EC2 instance, if Jenkins runs locally as the `jenkins` user
 
 Adjust ownership and permissions to match your Jenkins agent and security requirements.
 
 ### 2. Configure Nginx
-
-Example server block:
-
-```nginx
-server {
-    listen 80;
-    server_name _;
-
-    root /var/www/jenkins-site;
-    index index.html;
-
-    location / {
-        try_files $uri $uri/ =404;
-    }
-}
-```
 
 Validate and reload Nginx:
 
